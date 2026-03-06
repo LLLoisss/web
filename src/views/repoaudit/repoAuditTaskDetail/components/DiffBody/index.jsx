@@ -2,14 +2,15 @@ import React, { memo } from 'react';
 
 import { Empty, Skeleton, Space } from 'antd';
 
+import { FILE_STATUS } from '@/common/constant';
+
 import ReviewDiff from './ReviewDiff';
 
 const DiffBody = ({ loading, currentFileDiff, fileStatus }) => {
   if (loading) return <Skeleton active />;
-  if (fileStatus === 0)
+  if (fileStatus === FILE_STATUS.REVIEWING)
     return <Empty description="审查中, 请稍后刷新再试..." />;
   if (!currentFileDiff) {
-    console.log('fileStatus :>> ', fileStatus);
     return <Empty description="该文件暂无代码块" />;
   }
 

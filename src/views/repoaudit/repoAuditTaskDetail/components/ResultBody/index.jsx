@@ -24,7 +24,7 @@ import {
   oneLight,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ISSUE_LEVELS, ORDER_STATUS } from '@/common/constant';
+import { ISSUE_LEVELS, ORDER_STATUS, FILE_STATUS } from '@/common/constant';
 
 import styles from './index.less';
 
@@ -51,6 +51,26 @@ const ResultsBody = ({
   handleFeedback,
   fileStatus,
 }) => {
+  // Hooks 必须在所有条件分支之前调用，保证每次渲染调用顺序一致
+  const [activeKeys, setActiveKeys] = useState([]);
+  const [seenResults, setSeenResults] = useState(new Set());
+
+  const onCollapseChange = (keys) => {
+    console.log('results :>> ', results);
+    console.log('keys :>> ', keys);
+    setActiveKeys(keys);
+    const activeKey = Array.isArray(keys) ? keys[keys.length - 1] : keys;
+    const item = results.find((r) => String(r.id) === activeKey);
+    if (item && !seenResults.has(item.id)) {
+      setSeenResults((prev) => {
+        const next = new Set(prev);
+        next.add(item.id);
+        return next;
+      });
+      console.log('向后端发送请求 :>> ', item.id);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: 12 }}>
@@ -58,9 +78,9 @@ const ResultsBody = ({
       </div>
     );
   }
-  if (fileStatus === 0)
+  if (fileStatus === FILE_STATUS.REVIEWING)
     return <Empty description="审查中, 请稍后刷新再试..." />;
-  if (fileStatus === 2) return <Empty description="审查失败" />;
+  if (fileStatus === FILE_STATUS.FAILED) return <Empty description="审查失败" />;
 
   if (!results.length) {
     return (
@@ -69,37 +89,14 @@ const ResultsBody = ({
       </div>
     );
   }
-  // 哪些被激活
-  const [activeKeys, setActiveKeys] = useState([]);
-  const [seenResults, setSeenResults] = useState(new Set()); // 记录已展开过的结果id
-  // 处理 Collapse 展开/收起
-  const onCollapseChange = (keys) => {
-    console.log('results :>> ', results);
-    console.log('keys :>> ', keys);
-    setActiveKeys(keys); // keys 是字符串数组，如 ['2', '3']
-    // 取出最后一个被激活的key
-    const activeKey = Array.isArray(keys) ? keys[keys.length - 1] : keys;
-    // 找到相应的item
-    const item = results.find((r) => String(r.id) === activeKey);
-    if (item && !seenResults.has(item.id)) {
-      // 首次展开
-      setSeenResults((prev) => {
-        const next = new Set(prev);
-        next.add(item.id);
-        return next;
-      });
-      // 向后端发送请求
-      console.log('向后端发送请求 :>> ', item.id);
-    }
-  };
 
   return (
     <List
       itemLayout="vertical"
       dataSource={results}
       renderItem={(item) => {
-        // 判断当前 item 是否展开（active）
-        const isActive = activeKeys.includes(String(item.order));
+        // 判断当前 item 是否展开（active）—— Panel key 用的是 item.id
+        const isActive = activeKeys.includes(String(item.id));
         const isAccepted = item.status === ORDER_STATUS.ACCEPTED;
         const isIgnored = item.status === ORDER_STATUS.IGNORED;
         const fullBottomLabel = `${currentFilePath}${
