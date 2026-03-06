@@ -48,3 +48,10 @@ export const ORDER_STATUS = {
   ACCEPTED: 1,
   IGNORED: 2,
 };
+
+// 文件审查状态
+export const FILE_STATUS = {
+  REVIEWING: 0, // 审查中
+  DONE: 1,      // 审查完成
+  FAILED: 2,    // 审查失败
+};

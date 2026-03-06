@@ -44,6 +44,8 @@ import {
   resetAllCache,
 } from '@/redux/actions/review';
 
+import { FILE_STATUS } from '@/common/constant';
+
 import DiffBody from './components/DiffBody';
 import FileTreeBody from './components/FileTreeBody';
 import MyCardContent from './components/MyCardContent';
@@ -102,7 +104,7 @@ const renderLeafTitle = (fileName, file) => {
     medium: file.midProblemNum,
     low: file.lowProblemNum,
   };
-  if (reviewStatus === 0) {
+  if (reviewStatus === FILE_STATUS.REVIEWING) {
     return (
       <Space size={6}>
         <span>{fileName}</span>
@@ -112,7 +114,7 @@ const renderLeafTitle = (fileName, file) => {
       </Space>
     );
   }
-  if (reviewStatus === 2) {
+  if (reviewStatus === FILE_STATUS.FAILED) {
     return (
       <Space size={6}>
         <span>{fileName}</span>
@@ -216,6 +218,7 @@ const CodeReviewPage = () => {
     currentFileProblems,
     loadingDetail,
     locateLine,
+    detailLoadError,
   } = useSelector((state) => state.review);
 
   // 页面加载完成后开始向后端发请求获取 MR 概览
@@ -228,14 +231,17 @@ const CodeReviewPage = () => {
     };
   }, [reviewId, dispatch]);
 
-  // TODO：2. 自动选中第一个crId不为空的文件
   // 当文件列表加载完毕，且当前没有选中文件时，触发第一个文件的加载
   useEffect(() => {
-    if (fileList.length > 0 && !currentFilePath) {
-      // 加载第一个crId不为空的file
+    // detailLoadError 为 true 表示上次请求失败，不自动重试，防止死循环
+    if (fileList.length > 0 && !currentFilePath && !detailLoadError) {
+      // 加载第一个 crId 不为空且不处于审查中状态的文件
       const firstFile = fileList.find(
         (file) =>
-          file.crId !== null && file.crId !== undefined && file.crId !== '',
+          file.crId !== null &&
+          file.crId !== undefined &&
+          file.crId !== '' &&
+          file.fileStatus !== FILE_STATUS.REVIEWING,
       );
       // 如果第一个文件的crId不为空，则正常请求
       if (firstFile) {
@@ -243,6 +249,7 @@ const CodeReviewPage = () => {
           fetchFileDetail({
             crId: firstFile.crId,
             filePath: firstFile.filePath,
+            fileStatus: firstFile.fileStatus,
           }),
         );
       } else {
@@ -251,7 +258,7 @@ const CodeReviewPage = () => {
         dispatch(setCurrentFileStatus(fileList[0].fileStatus));
       }
     }
-  }, [fileList, currentFilePath, dispatch]);
+  }, [fileList, currentFilePath, detailLoadError, dispatch]);
 
   // 构建树数据
   const treeData = useMemo(() => buildTreeData(fileList), [fileList]);
@@ -265,8 +272,8 @@ const CodeReviewPage = () => {
     const { isLeaf, data, fileStatus } = info.node;
     if (isLeaf && data) {
       console.log('data :>> ', data);
-      if (!data.crId || !fileStatus) {
-        // 如果crId为空或者文件状态为审查中
+      if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING) {
+        // 如果crId为空或者文件状态为审查中，仅选中文件不发起请求
         dispatch(clearDetail()); // 清空上一个文件的显示
         dispatch(setCurrentFilePath(data.filePath));
         console.log('currentFilePath 222:>> ', currentFilePath);
@@ -274,7 +281,13 @@ const CodeReviewPage = () => {
         return;
       }
       dispatch(clearDetail()); // 清空上一个文件的显示
-      dispatch(fetchFileDetail({ crId: data.crId, filePath: data.filePath }));
+      dispatch(
+        fetchFileDetail({
+          crId: data.crId,
+          filePath: data.filePath,
+          fileStatus: data.fileStatus,
+        }),
+      );
     }
   };
 

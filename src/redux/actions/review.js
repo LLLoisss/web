@@ -50,7 +50,7 @@ const fetchReviewSummary = (mergeId) => (dispatch) => {
 
 // 2. 获取文件详情
 const fetchFileDetail =
-  ({ crId, filePath }) =>
+  ({ crId, filePath, fileStatus }) =>
   (dispatch, getState) => {
     console.log('fetchFileDetailcrIdcrIdcrId :>> ', crId);
     console.log('fetchFileDetailfilePathfilePathfilePath :>> ', filePath);
@@ -62,7 +62,7 @@ const fetchFileDetail =
     // 手动触发 pending 状态，并传递参数以便记录当前选中的ID
     dispatch({
       type: FETCH_DETAIL_REQUEST,
-      payload: { crId, filePath },
+      payload: { crId, filePath, fileStatus },
     });
 
     // 如果有缓存，直接分发Success并附带缓存数据
@@ -165,6 +165,7 @@ const ACTION_HANDLERS = {
   [FETCH_DETAIL_REQUEST]: (state, { payload }) => ({
     ...state,
     loadingDetail: true,
+    detailLoadError: false,
     // 记录当前选中的ID
     currentFileCrId: payload.crId,
     currentFilePath: payload.filePath,
@@ -180,6 +181,10 @@ const ACTION_HANDLERS = {
   [FETCH_DETAIL_SUCCESS]: (state, { payload }) => {
     console.log('FETCH_DETAIL_SUCCESSpayload :>> ', payload);
     const { diff, problemList, crId, fromCache } = payload;
+    // 防止过期请求的响应覆盖当前状态
+    if (crId !== state.currentFileCrId) {
+      return state;
+    }
     const nextState = {
       ...state,
       loadingDetail: false,
@@ -201,8 +206,14 @@ const ACTION_HANDLERS = {
   [FETCH_DETAIL_FAILURE]: (state) => ({
     ...state,
     loadingDetail: false,
+    detailLoadError: true,
     currentFileDiff: '',
     currentFileProblems: [],
+    // 重置 currentFilePath，使文件树不再高亮失败的文件
+    // 配合 detailLoadError 防止 useEffect 死循环重试
+    currentFilePath: null,
+    currentFileCrId: null,
+    currentFileStatus: null,
   }),
 
   // --- Feedback ---
@@ -289,6 +300,8 @@ const ACTION_HANDLERS = {
   }),
   [CLEAR_DETAIL]: (state) => ({
     ...state,
+    loadingDetail: false,
+    currentFileCrId: null,
     currentFileDiff: '',
     currentFileProblems: [],
     locateLine: null,

@@ -27,6 +27,7 @@ export default {
     currentFileDiff: '',
     currentFileProblems: [],
     loadingDetail: false,
+    detailLoadError: false,
 
     // 用于 Diff 定位
     locateLine: null,
