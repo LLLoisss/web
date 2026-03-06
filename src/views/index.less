@@ -1,0 +1,172 @@
+/* ===== 页面级布局样式 ===== */
+.sitePageHeaderGhostWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #f0f2f5;
+}
+
+.layout {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+}
+
+.contentWrapper {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.downThree {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.leftCol {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.midCol {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.leftCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  :global(.ant-card-body) {
+    flex: 1;
+    overflow: auto;
+    padding: 8px;
+  }
+}
+
+.midCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  :global(.ant-card-body) {
+    flex: 1;
+    overflow: auto;
+  }
+}
+
+.rightCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  :global(.ant-card-body) {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+  }
+}
+
+/* 可拖拽分割条 */
+.divider {
+  width: 6px;
+  cursor: col-resize;
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  z-index: 10;
+
+  &:hover .dividerLine {
+    background: #1890ff;
+    opacity: 0.5;
+  }
+}
+
+.dividerLine {
+  width: 2px;
+  margin: 0 auto;
+  background: #e8e8e8;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.dividerLineActive {
+  background: #1890ff !important;
+  opacity: 0.8 !important;
+}
+
+/* ===== 审查结果列表样式 ===== */
+.customButton:hover {
+  border-color: grey !important;
+}
+
+.listItem {
+  cursor: pointer;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.listCollapsePanelSpace {
+  display: flex;
+  // width: 100%;
+  justify-content: space-between;
+  // white-space: nowrap;
+  // overflow: hidden;
+}
+
+.listCollapsePanelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reactMarkdownContainer {
+  position: relative;
+  margin: 1em 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(250, 250, 250); // 浅灰背景
+  border: 1px solid #e5e7eb; // 轻边框，增强层次
+}
+
+.reactMarkdownLanguageContainer {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  font-size: 12px;
+  color: #555;
+  background: #eaecef;
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 1;
+  text-transform: uppercase;
+}
+
+.reactMarkdownCodeContainer {
+  background: rgba(250, 250, 250); // 行内 code 背景色浅灰
+  color: #679416;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
