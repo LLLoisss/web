@@ -31,5 +31,8 @@ export default {
 
     // 用于 Diff 定位
     locateLine: null,
+
+    // 已查看的审查结果 ID 集合（仅在刷新页面时重置）
+    seenResults: [],
   },
 };

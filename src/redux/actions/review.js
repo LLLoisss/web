@@ -24,6 +24,9 @@ const SET_CURRENT_FILE_STATUS = 'SET_CURRENT_FILE_STATUS';
 const CLEAR_FILE_CACHE = 'CLEAR_FILE_CACHE';
 const RESET_ALL_CACHE = 'RESET_ALL_CACHE';
 
+// 标记审查结果为已查看
+const ADD_SEEN_RESULT = 'ADD_SEEN_RESULT';
+
 // --- Action Creators (Thunks & Sync) ---
 
 // 1. 获取概览
@@ -135,6 +138,12 @@ const clearFileCache = (crId) => ({
 // 2. 重置全部缓存 (通常在离开 Code Review 页面，或切换到另一个 MR 时调用)
 const resetAllCache = () => ({
   type: RESET_ALL_CACHE,
+});
+
+// 标记某个审查结果为已查看
+const addSeenResult = (resultId) => ({
+  type: ADD_SEEN_RESULT,
+  payload: resultId,
 });
 
 // --- Action Handlers (Reducer Logic) ---
@@ -293,6 +302,12 @@ const ACTION_HANDLERS = {
     locateLine: null,
   }),
 
+  // --- 已查看标记 ---
+  [ADD_SEEN_RESULT]: (state, { payload }) => {
+    if (state.seenResults.includes(payload)) return state;
+    return { ...state, seenResults: [...state.seenResults, payload] };
+  },
+
   // --- Sync Actions ---
   [LOCATE_TO_LINE]: (state, { payload }) => ({
     ...state,
@@ -318,5 +333,6 @@ export {
   setCurrentFileStatus,
   clearFileCache,
   resetAllCache,
+  addSeenResult,
   ACTION_HANDLERS,
 };

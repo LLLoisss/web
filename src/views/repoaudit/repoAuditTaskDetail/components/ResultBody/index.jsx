@@ -1,4 +1,5 @@
 import React, { memo, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
@@ -25,6 +26,7 @@ import {
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { ISSUE_LEVELS, ORDER_STATUS, FILE_STATUS } from '@/common/constant';
+import { addSeenResult } from '@/redux/actions/review';
 
 import styles from './index.less';
 
@@ -53,7 +55,8 @@ const ResultsBody = ({
 }) => {
   // Hooks 必须在所有条件分支之前调用，保证每次渲染调用顺序一致
   const [activeKeys, setActiveKeys] = useState([]);
-  const [seenResults, setSeenResults] = useState(new Set());
+  const seenResults = useSelector((state) => state.review.seenResults);
+  const dispatch = useDispatch();
 
   const onCollapseChange = (keys) => {
     console.log('results :>> ', results);
@@ -61,12 +64,8 @@ const ResultsBody = ({
     setActiveKeys(keys);
     const activeKey = Array.isArray(keys) ? keys[keys.length - 1] : keys;
     const item = results.find((r) => String(r.id) === activeKey);
-    if (item && !seenResults.has(item.id)) {
-      setSeenResults((prev) => {
-        const next = new Set(prev);
-        next.add(item.id);
-        return next;
-      });
+    if (item && !seenResults.includes(item.id)) {
+      dispatch(addSeenResult(item.id));
       console.log('向后端发送请求 :>> ', item.id);
     }
   };
@@ -121,7 +120,7 @@ const ResultsBody = ({
                     {/* 中间 */}
                     <Text className={styles.listCollapsePanelTex}>
                       {item.issueType}
-                      {seenResults.has(item.id) ? (
+                      {seenResults.includes(item.id) ? (
                         <EyeOutlined
                           title="已经查看过"
                           style={{ color: '#1890ff', marginLeft: '8px' }}
