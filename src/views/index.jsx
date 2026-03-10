@@ -279,8 +279,21 @@ const CodeReviewPage = () => {
     (_, info) => {
       const { isLeaf, data } = info.node;
       if (isLeaf && data) {
+        // crId为空且审查中，直接向后端发起请求获取审查详情
+        if (!data.crId && data.fileStatus === FILE_STATUS.REVIEWING) {
+          dispatch(clearDetail());
+          dispatch(
+            fetchFileDetail({
+              crId: null,
+              mergeId: reviewId,
+              filePath: data.filePath,
+              fileStatus: data.fileStatus,
+            }),
+          );
+          return;
+        }
         if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING || data.fileStatus === FILE_STATUS.UNSUPPORTED) {
-          // 如果crId为空或者文件状态为审查中/不支持，仅选中文件不发起请求
+          // crId为空(非审查中)或文件状态为审查中(有crId)/不支持，仅选中文件不发起请求
           dispatch(clearDetail());
           dispatch(setCurrentFilePath(data.filePath));
           dispatch(setCurrentFileStatus(data.fileStatus));

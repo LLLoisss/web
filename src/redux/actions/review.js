@@ -1,5 +1,6 @@
 // action/review.js
 import codeReviewService from '@/service/codeReviewService';
+import { FILE_STATUS } from '@/common/constant';
 
 // --- Action Types ---
 const FETCH_SUMMARY_REQUEST = 'FETCH_SUMMARY_REQUEST';
@@ -60,7 +61,6 @@ const fetchFileDetail =
     // TODO：查询当前文件记录表，如果已存在，则从文件记录表中找
     // 检查当前缓存中是否已经有该文件的记录
     const state = getState().review;
-    const cacheData = state.fileDetailsCache[crId];
 
     // 手动触发 pending 状态，并传递参数以便记录当前选中的ID
     dispatch({
@@ -68,24 +68,42 @@ const fetchFileDetail =
       payload: { crId, filePath, fileStatus },
     });
 
-    // 如果有缓存，直接分发Success并附带缓存数据
-    if (cacheData) {
-      dispatch({
-        type: FETCH_DETAIL_SUCCESS,
-        payload: { ...cacheData, filePath, crId, fromCache: true },
-      });
-      return; // 命中缓存，终止后续请求
+    // 有crId时检查缓存
+    if (crId) {
+      const cacheData = state.fileDetailsCache[crId];
+      // 如果有缓存，直接分发Success并附带缓存数据
+      if (cacheData) {
+        dispatch({
+          type: FETCH_DETAIL_SUCCESS,
+          payload: { ...cacheData, filePath, crId, fromCache: true },
+        });
+        return; // 命中缓存，终止后续请求
+      }
     }
 
-    // 如果没有缓存，则发起网络请求
+    // 发起网络请求
     codeReviewService
       .fetchFileDetail({ crId, mergeId, filePath })
       .then((res) => {
-        // 将 filePath 透传回去
-        dispatch({
-          type: FETCH_DETAIL_SUCCESS,
-          payload: { ...res, filePath, crId, fromCache: false },
-        });
+        if (!crId) {
+          // 审查中文件的请求（原始crId为空），使用响应中的crId
+          dispatch({
+            type: FETCH_DETAIL_SUCCESS,
+            payload: {
+              ...res,
+              filePath,
+              crId: res.crId || null,
+              fromCache: false,
+              isReviewingRequest: true,
+            },
+          });
+        } else {
+          // 正常请求，将 filePath 透传回去
+          dispatch({
+            type: FETCH_DETAIL_SUCCESS,
+            payload: { ...res, filePath, crId, fromCache: false },
+          });
+        }
       })
       .catch(() => {
         dispatch({
@@ -189,7 +207,50 @@ const ACTION_HANDLERS = {
   // }),
   [FETCH_DETAIL_SUCCESS]: (state, { payload }) => {
     console.log('FETCH_DETAIL_SUCCESSpayload :>> ', payload);
-    const { diff, problemList, crId, fromCache } = payload;
+    const {
+      diff,
+      problemList,
+      crId,
+      fromCache,
+      isReviewingRequest,
+      filePath,
+      fileStatus: responseFileStatus,
+    } = payload;
+
+    if (isReviewingRequest) {
+      // 审查中文件的请求返回，使用filePath校验防止过期请求覆盖
+      if (filePath !== state.currentFilePath) return state;
+
+      const nextState = {
+        ...state,
+        loadingDetail: false,
+        currentFileDiff: diff || '',
+        currentFileProblems: problemList || [],
+      };
+
+      if (crId) {
+        // 后端返回了crId（审查完成或失败），进行缓存并更新数据
+        const newFileStatus =
+          responseFileStatus != null ? responseFileStatus : FILE_STATUS.DONE;
+        nextState.currentFileCrId = crId;
+        nextState.currentFileStatus = newFileStatus;
+        nextState.fileDetailsCache = {
+          ...state.fileDetailsCache,
+          [crId]: { diff: diff || '', problemList: problemList || [] },
+        };
+        // 同步更新fileList中对应文件的crId和状态
+        nextState.fileList = state.fileList.map((f) =>
+          f.filePath === filePath
+            ? { ...f, crId, fileStatus: newFileStatus }
+            : f,
+        );
+      }
+      // crId为空表示仍在审查中，不缓存，仅更新展示状态
+
+      return nextState;
+    }
+
+    // 正常请求处理（原有逻辑）
     // 防止过期请求的响应覆盖当前状态
     if (crId !== state.currentFileCrId) {
       return state;
