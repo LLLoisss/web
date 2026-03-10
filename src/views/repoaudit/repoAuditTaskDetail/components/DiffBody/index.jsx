@@ -6,7 +6,7 @@ import { FILE_STATUS } from '@/common/constant';
 
 import ReviewDiff from './ReviewDiff';
 
-const DiffBody = ({ loading, currentFileDiff, fileStatus }) => {
+const DiffBody = ({ loading, currentFileDiff, locateLine, fileStatus }) => {
   if (loading) return <Skeleton active />;
   if (fileStatus === FILE_STATUS.REVIEWING)
     return <Empty description="审查中, 请稍后刷新再试..." />;
@@ -16,7 +16,7 @@ const DiffBody = ({ loading, currentFileDiff, fileStatus }) => {
 
   return (
     <Space direction="vertical" size={12} style={{ minWidth: '100%' }}>
-      <ReviewDiff diffText={currentFileDiff || ''} />
+      <ReviewDiff diffText={currentFileDiff || ''} locateLine={locateLine} />
     </Space>
   );
 };

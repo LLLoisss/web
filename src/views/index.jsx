@@ -235,13 +235,13 @@ const CodeReviewPage = () => {
   useEffect(() => {
     // detailLoadError 为 true 表示上次请求失败，不自动重试，防止死循环
     if (fileList.length > 0 && !currentFilePath && !detailLoadError) {
-      // 加载第一个 crId 不为空且不处于审查中状态的文件
+      // 加载第一个 crId 不为空且审查完成的文件
       const firstFile = fileList.find(
         (file) =>
           file.crId !== null &&
           file.crId !== undefined &&
           file.crId !== '' &&
-          file.fileStatus !== FILE_STATUS.REVIEWING,
+          file.fileStatus === FILE_STATUS.DONE,
       );
       // 如果第一个文件的crId不为空，则正常请求
       if (firstFile) {
@@ -264,32 +264,29 @@ const CodeReviewPage = () => {
   const treeData = useMemo(() => buildTreeData(fileList), [fileList]);
 
   // 点击文件树
-  const onSelectFile = (_, info) => {
-    // TODO:点击没有crId的文件
-    console.log('fileList :>> ', fileList);
-    console.log('currentFilePath :>> ', currentFilePath);
-    console.log('infoinfoinfo :>> ', info);
-    const { isLeaf, data, fileStatus } = info.node;
-    if (isLeaf && data) {
-      console.log('data :>> ', data);
-      if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING) {
-        // 如果crId为空或者文件状态为审查中，仅选中文件不发起请求
-        dispatch(clearDetail()); // 清空上一个文件的显示
-        dispatch(setCurrentFilePath(data.filePath));
-        console.log('currentFilePath 222:>> ', currentFilePath);
-        dispatch(setCurrentFileStatus(data.fileStatus));
-        return;
+  const onSelectFile = useCallback(
+    (_, info) => {
+      const { isLeaf, data } = info.node;
+      if (isLeaf && data) {
+        if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING) {
+          // 如果crId为空或者文件状态为审查中，仅选中文件不发起请求
+          dispatch(clearDetail());
+          dispatch(setCurrentFilePath(data.filePath));
+          dispatch(setCurrentFileStatus(data.fileStatus));
+          return;
+        }
+        dispatch(clearDetail());
+        dispatch(
+          fetchFileDetail({
+            crId: data.crId,
+            filePath: data.filePath,
+            fileStatus: data.fileStatus,
+          }),
+        );
       }
-      dispatch(clearDetail()); // 清空上一个文件的显示
-      dispatch(
-        fetchFileDetail({
-          crId: data.crId,
-          filePath: data.filePath,
-          fileStatus: data.fileStatus,
-        }),
-      );
-    }
-  };
+    },
+    [dispatch],
+  );
 
   // 处理反馈 (1:采纳, 2:忽略)
   const handleFeedback = (problem, status) => {

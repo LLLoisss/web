@@ -127,7 +127,7 @@ const cellStyle = (kind) => {
  * - diffText: diff字符串
  * - locateLine: number | null （按 newLine 定位）
  */
-const ReviewDiff = ({ diffText }) => {
+const ReviewDiff = ({ diffText, locateLine }) => {
   const rows = useMemo(() => parseUnifiedDiff(diffText), [diffText]);
 
   // key: newLine -> ref，使用代码行映射dom元素
@@ -139,8 +139,7 @@ const ReviewDiff = ({ diffText }) => {
     <Card size="small" type="inner" title="Diff（按行号 / +/- 高亮）">
       <div style={{ border: '1px solid #f0f0f0', borderRadius: 6 }}>
         {rows.map((r, idx) => {
-          // const isActive = locateLine != null && r.newLine === locateLine;
-          const isActive = false;
+          const isActive = locateLine != null && r.newLine === locateLine;
           // 将 newLine 行挂 ref，用于定位滚动
           const setRef = (node) => {
             if (node && r.newLine != null)

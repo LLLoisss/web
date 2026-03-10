@@ -294,11 +294,14 @@ const ACTION_HANDLERS = {
     ...state,
     // 清空缓存字典
     fileDetailsCache: {},
-    // 建议同时清空当前高亮和详情状态，避免切换 MR 时看到上一个 MR 的残影
+    // 同时清空当前高亮和详情状态，避免切换 MR 时看到上一个 MR 的残影
     currentFileCrId: null,
     currentFilePath: null,
+    currentFileStatus: null,
     currentFileDiff: '',
     currentFileProblems: [],
+    loadingDetail: false,
+    detailLoadError: false,
     locateLine: null,
   }),
 
@@ -317,6 +320,7 @@ const ACTION_HANDLERS = {
     ...state,
     loadingDetail: false,
     currentFileCrId: null,
+    currentFileStatus: null,
     currentFileDiff: '',
     currentFileProblems: [],
     locateLine: null,

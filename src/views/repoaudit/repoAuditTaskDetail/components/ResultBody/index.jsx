@@ -79,7 +79,8 @@ const ResultsBody = ({
   }
   if (fileStatus === FILE_STATUS.REVIEWING)
     return <Empty description="审查中, 请稍后刷新再试..." />;
-  if (fileStatus === FILE_STATUS.FAILED) return <Empty description="审查失败" />;
+  if (fileStatus === FILE_STATUS.FAILED)
+    return <Empty description="审查失败" />;
 
   if (!results.length) {
     return (
