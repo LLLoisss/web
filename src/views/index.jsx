@@ -221,6 +221,7 @@ const CodeReviewPage = () => {
     mrInfo,
     fileList,
     loadingSummary,
+    currentFileId,
     currentFileCrId,
     currentFilePath,
     currentFileStatus,
@@ -245,27 +246,22 @@ const CodeReviewPage = () => {
   useEffect(() => {
     // detailLoadError 为 true 表示上次请求失败，不自动重试，防止死循环
     if (fileList.length > 0 && !currentFilePath && !detailLoadError) {
-      // 加载第一个 crId 不为空且审查完成的文件
+      // 找到第一个非 UNSUPPORTED 的文件
       const firstFile = fileList.find(
-        (file) =>
-          file.crId !== null &&
-          file.crId !== undefined &&
-          file.crId !== '' &&
-          file.fileStatus === FILE_STATUS.DONE,
+        (file) => file.fileStatus !== FILE_STATUS.UNSUPPORTED,
       );
-      // 如果第一个文件的crId不为空，则正常请求
       if (firstFile) {
         dispatch(
           fetchFileDetail({
-            crId: firstFile.crId,
-            mergeId: reviewId,
+            id: firstFile.id,
+            crId: firstFile.crId || null,
             filePath: firstFile.filePath,
             fileStatus: firstFile.fileStatus,
           }),
         );
       } else {
-        // 全部文件crId均为空，则默认选中第一个文件
-        dispatch(setCurrentFilePath(fileList[0].filePath));
+        // 全部文件均为不支持，默认选中第一个文件
+        dispatch(setCurrentFilePath(fileList[0].filePath, fileList[0].id));
         dispatch(setCurrentFileStatus(fileList[0].fileStatus));
       }
     }
@@ -279,31 +275,19 @@ const CodeReviewPage = () => {
     (_, info) => {
       const { isLeaf, data } = info.node;
       if (isLeaf && data) {
-        // crId为空且审查中，直接向后端发起请求获取审查详情
-        if (!data.crId && data.fileStatus === FILE_STATUS.REVIEWING) {
+        // 不支持审查的文件，不发起请求，直接设置状态
+        if (data.fileStatus === FILE_STATUS.UNSUPPORTED) {
           dispatch(clearDetail());
-          dispatch(
-            fetchFileDetail({
-              crId: null,
-              mergeId: reviewId,
-              filePath: data.filePath,
-              fileStatus: data.fileStatus,
-            }),
-          );
-          return;
-        }
-        if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING || data.fileStatus === FILE_STATUS.UNSUPPORTED) {
-          // crId为空(非审查中)或文件状态为审查中(有crId)/不支持，仅选中文件不发起请求
-          dispatch(clearDetail());
-          dispatch(setCurrentFilePath(data.filePath));
+          dispatch(setCurrentFilePath(data.filePath, data.id));
           dispatch(setCurrentFileStatus(data.fileStatus));
           return;
         }
+        // 其他状态的文件，使用id发起请求
         dispatch(clearDetail());
         dispatch(
           fetchFileDetail({
-            crId: data.crId,
-            mergeId: reviewId,
+            id: data.id,
+            crId: data.crId || null,
             filePath: data.filePath,
             fileStatus: data.fileStatus,
           }),

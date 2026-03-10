@@ -1,6 +1,5 @@
 // action/review.js
 import codeReviewService from '@/service/codeReviewService';
-import { FILE_STATUS } from '@/common/constant';
 
 // --- Action Types ---
 const FETCH_SUMMARY_REQUEST = 'FETCH_SUMMARY_REQUEST';
@@ -54,56 +53,42 @@ const fetchReviewSummary = (mergeId) => (dispatch) => {
 
 // 2. 获取文件详情
 const fetchFileDetail =
-  ({ crId, mergeId, filePath, fileStatus }) =>
+  ({ id, crId, filePath, fileStatus }) =>
   (dispatch, getState) => {
-    console.log('fetchFileDetailcrIdcrIdcrId :>> ', crId);
-    console.log('fetchFileDetailfilePathfilePathfilePath :>> ', filePath);
-    // TODO：查询当前文件记录表，如果已存在，则从文件记录表中找
-    // 检查当前缓存中是否已经有该文件的记录
     const state = getState().review;
 
-    // 手动触发 pending 状态，并传递参数以便记录当前选中的ID
+    // 手动触发 pending 状态，并传递参数以便记录当前选中的文件
     dispatch({
       type: FETCH_DETAIL_REQUEST,
-      payload: { crId, filePath, fileStatus },
+      payload: { id, crId, filePath, fileStatus },
     });
 
     // 有crId时检查缓存
     if (crId) {
       const cacheData = state.fileDetailsCache[crId];
-      // 如果有缓存，直接分发Success并附带缓存数据
       if (cacheData) {
         dispatch({
           type: FETCH_DETAIL_SUCCESS,
-          payload: { ...cacheData, filePath, crId, fromCache: true },
+          payload: { ...cacheData, filePath, id, crId, fromCache: true },
         });
         return; // 命中缓存，终止后续请求
       }
     }
 
-    // 发起网络请求
+    // 通过文件id发起网络请求
     codeReviewService
-      .fetchFileDetail({ crId, mergeId, filePath })
+      .fetchFileDetail(id)
       .then((res) => {
-        if (!crId) {
-          // 审查中文件的请求（原始crId为空），使用响应中的crId
-          dispatch({
-            type: FETCH_DETAIL_SUCCESS,
-            payload: {
-              ...res,
-              filePath,
-              crId: res.crId || null,
-              fromCache: false,
-              isReviewingRequest: true,
-            },
-          });
-        } else {
-          // 正常请求，将 filePath 透传回去
-          dispatch({
-            type: FETCH_DETAIL_SUCCESS,
-            payload: { ...res, filePath, crId, fromCache: false },
-          });
-        }
+        dispatch({
+          type: FETCH_DETAIL_SUCCESS,
+          payload: {
+            ...res,
+            filePath,
+            id,
+            crId: res.crId || null,
+            fromCache: false,
+          },
+        });
       })
       .catch(() => {
         dispatch({
@@ -136,9 +121,9 @@ const clearDetail = () => ({
 });
 
 // 设置当前文件路径
-const setCurrentFilePath = (filePath) => ({
+const setCurrentFilePath = (filePath, id) => ({
   type: SET_CURRENT_FILE_PATH,
-  payload: filePath,
+  payload: { filePath, id },
 });
 
 // 设置当前文件状态
@@ -193,7 +178,8 @@ const ACTION_HANDLERS = {
     ...state,
     loadingDetail: true,
     detailLoadError: false,
-    // 记录当前选中的ID
+    // 记录当前选中文件的信息
+    currentFileId: payload.id,
     currentFileCrId: payload.crId,
     currentFilePath: payload.filePath,
     currentFileStatus: payload.fileStatus,
@@ -206,71 +192,48 @@ const ACTION_HANDLERS = {
   //   currentFileProblems: payload.problemList || [],
   // }),
   [FETCH_DETAIL_SUCCESS]: (state, { payload }) => {
-    console.log('FETCH_DETAIL_SUCCESSpayload :>> ', payload);
     const {
       diff,
       problemList,
       crId,
       fromCache,
-      isReviewingRequest,
+      id,
       filePath,
       fileStatus: responseFileStatus,
     } = payload;
 
-    if (isReviewingRequest) {
-      // 审查中文件的请求返回，使用filePath校验防止过期请求覆盖
-      if (filePath !== state.currentFilePath) return state;
+    // 使用id防止过期请求的响应覆盖当前状态
+    if (id !== state.currentFileId) return state;
 
-      const nextState = {
-        ...state,
-        loadingDetail: false,
-        currentFileDiff: diff || '',
-        currentFileProblems: problemList || [],
-      };
-
-      if (crId) {
-        // 后端返回了crId（审查完成或失败），进行缓存并更新数据
-        const newFileStatus =
-          responseFileStatus != null ? responseFileStatus : FILE_STATUS.DONE;
-        nextState.currentFileCrId = crId;
-        nextState.currentFileStatus = newFileStatus;
-        nextState.fileDetailsCache = {
-          ...state.fileDetailsCache,
-          [crId]: { diff: diff || '', problemList: problemList || [] },
-        };
-        // 同步更新fileList中对应文件的crId和状态
-        nextState.fileList = state.fileList.map((f) =>
-          f.filePath === filePath
-            ? { ...f, crId, fileStatus: newFileStatus }
-            : f,
-        );
-      }
-      // crId为空表示仍在审查中，不缓存，仅更新展示状态
-
-      return nextState;
-    }
-
-    // 正常请求处理（原有逻辑）
-    // 防止过期请求的响应覆盖当前状态
-    if (crId !== state.currentFileCrId) {
-      return state;
-    }
     const nextState = {
       ...state,
       loadingDetail: false,
       currentFileDiff: diff || '',
       currentFileProblems: problemList || [],
     };
-    // 如果数据不是来自缓存，我们需要将其存入缓存字典
-    if (!fromCache) {
-      nextState.fileDetailsCache = {
-        ...state.fileDetailsCache,
-        [crId]: {
-          diff: diff || '',
-          problemList: problemList || [],
-        },
-      };
+
+    if (crId) {
+      // 后端返回了crId，更新当前状态并缓存
+      nextState.currentFileCrId = crId;
+      if (responseFileStatus != null) {
+        nextState.currentFileStatus = responseFileStatus;
+      }
+      // 非缓存数据存入缓存字典
+      if (!fromCache) {
+        nextState.fileDetailsCache = {
+          ...state.fileDetailsCache,
+          [crId]: { diff: diff || '', problemList: problemList || [] },
+        };
+      }
+      // 同步更新fileList中对应文件的crId和状态
+      nextState.fileList = state.fileList.map((f) =>
+        f.id === id
+          ? { ...f, crId, fileStatus: responseFileStatus != null ? responseFileStatus : f.fileStatus }
+          : f,
+      );
     }
+    // crId不存在，仅设置展示数据，不缓存
+
     return nextState;
   },
   [FETCH_DETAIL_FAILURE]: (state) => ({
@@ -279,8 +242,9 @@ const ACTION_HANDLERS = {
     detailLoadError: true,
     currentFileDiff: '',
     currentFileProblems: [],
-    // 重置 currentFilePath，使文件树不再高亮失败的文件
+    // 重置当前文件信息，使文件树不再高亮失败的文件
     // 配合 detailLoadError 防止 useEffect 死循环重试
+    currentFileId: null,
     currentFilePath: null,
     currentFileCrId: null,
     currentFileStatus: null,
@@ -330,7 +294,8 @@ const ACTION_HANDLERS = {
   // 处理设置当前文件路径
   [SET_CURRENT_FILE_PATH]: (state, { payload }) => ({
     ...state,
-    currentFilePath: payload,
+    currentFilePath: payload.filePath,
+    currentFileId: payload.id,
   }),
   // 处理设置当前文件状态
   [SET_CURRENT_FILE_STATUS]: (state, { payload }) => ({
@@ -356,6 +321,7 @@ const ACTION_HANDLERS = {
     // 清空缓存字典
     fileDetailsCache: {},
     // 同时清空当前高亮和详情状态，避免切换 MR 时看到上一个 MR 的残影
+    currentFileId: null,
     currentFileCrId: null,
     currentFilePath: null,
     currentFileStatus: null,
@@ -380,6 +346,7 @@ const ACTION_HANDLERS = {
   [CLEAR_DETAIL]: (state) => ({
     ...state,
     loadingDetail: false,
+    currentFileId: null,
     currentFileCrId: null,
     currentFileStatus: null,
     currentFileDiff: '',

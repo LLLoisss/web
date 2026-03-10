@@ -16,9 +16,9 @@ class CodeReviewService {
   }
 
   // 2. 获取文件详情
-  async fetchFileDetail({ crId, mergeId, filePath }) {
-    const res = await mockFetchFileDetailApi(crId);
-    // const res = await request.post(`/api/coding/getMergeDetail`, { crId, mergeId, filePath });
+  async fetchFileDetail(id) {
+    const res = await mockFetchFileDetailApi(id);
+    // const res = await request.post(`/api/coding/getMergeDetail`, { id });
     // 解码 diff 字段
     if (res.data.data && res.data.data.diff) {
       try {
@@ -27,8 +27,7 @@ class CodeReviewService {
         console.error('Failed to parse diff:', error);
       }
     }
-    // 将 filePath 透传回去，确保状态一致性
-    return { ...res.data, filePath };
+    return res.data;
   }
 
   // 3. 提交反馈
