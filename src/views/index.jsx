@@ -248,6 +248,7 @@ const CodeReviewPage = () => {
         dispatch(
           fetchFileDetail({
             crId: firstFile.crId,
+            mergeId: reviewId,
             filePath: firstFile.filePath,
             fileStatus: firstFile.fileStatus,
           }),
@@ -279,6 +280,7 @@ const CodeReviewPage = () => {
         dispatch(
           fetchFileDetail({
             crId: data.crId,
+            mergeId: reviewId,
             filePath: data.filePath,
             fileStatus: data.fileStatus,
           }),

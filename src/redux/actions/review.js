@@ -53,7 +53,7 @@ const fetchReviewSummary = (mergeId) => (dispatch) => {
 
 // 2. 获取文件详情
 const fetchFileDetail =
-  ({ crId, filePath, fileStatus }) =>
+  ({ crId, mergeId, filePath, fileStatus }) =>
   (dispatch, getState) => {
     console.log('fetchFileDetailcrIdcrIdcrId :>> ', crId);
     console.log('fetchFileDetailfilePathfilePathfilePath :>> ', filePath);
@@ -79,7 +79,7 @@ const fetchFileDetail =
 
     // 如果没有缓存，则发起网络请求
     codeReviewService
-      .fetchFileDetail({ crId, filePath })
+      .fetchFileDetail({ crId, mergeId, filePath })
       .then((res) => {
         // 将 filePath 透传回去
         dispatch({

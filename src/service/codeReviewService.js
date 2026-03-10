@@ -16,9 +16,9 @@ class CodeReviewService {
   }
 
   // 2. 获取文件详情
-  async fetchFileDetail({ crId, filePath }) {
+  async fetchFileDetail({ crId, mergeId, filePath }) {
     const res = await mockFetchFileDetailApi(crId);
-    // const res = await request.post(`/api/coding/getMergeDetail`, { crId });
+    // const res = await request.post(`/api/coding/getMergeDetail`, { crId, mergeId, filePath });
     // 解码 diff 字段
     if (res.data.data && res.data.data.diff) {
       try {
