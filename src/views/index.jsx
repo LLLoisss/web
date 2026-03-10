@@ -124,6 +124,16 @@ const renderLeafTitle = (fileName, file) => {
       </Space>
     );
   }
+  if (reviewStatus === FILE_STATUS.UNSUPPORTED) {
+    return (
+      <Space size={6}>
+        <span>{fileName}</span>
+        <Tag color="default">
+          不支持
+        </Tag>
+      </Space>
+    );
+  }
 
   return (
     <Space size={6}>
@@ -269,8 +279,8 @@ const CodeReviewPage = () => {
     (_, info) => {
       const { isLeaf, data } = info.node;
       if (isLeaf && data) {
-        if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING) {
-          // 如果crId为空或者文件状态为审查中，仅选中文件不发起请求
+        if (!data.crId || data.fileStatus === FILE_STATUS.REVIEWING || data.fileStatus === FILE_STATUS.UNSUPPORTED) {
+          // 如果crId为空或者文件状态为审查中/不支持，仅选中文件不发起请求
           dispatch(clearDetail());
           dispatch(setCurrentFilePath(data.filePath));
           dispatch(setCurrentFileStatus(data.fileStatus));

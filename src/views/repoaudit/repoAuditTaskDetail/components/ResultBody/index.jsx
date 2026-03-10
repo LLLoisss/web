@@ -81,6 +81,8 @@ const ResultsBody = ({
     return <Empty description="审查中, 请稍后刷新再试..." />;
   if (fileStatus === FILE_STATUS.FAILED)
     return <Empty description="审查失败" />;
+  if (fileStatus === FILE_STATUS.UNSUPPORTED)
+    return <Empty description="该文件类型不支持审查" />;
 
   if (!results.length) {
     return (

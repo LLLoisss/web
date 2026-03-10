@@ -35,6 +35,7 @@ export function mockFetchReviewSummaryApi(mergeId) {
             },
             { filePath: 'test.md', crId: '', fileStatus: 0 },
             { filePath: 'README.md', crId: 'CR_README_003', fileStatus: 2 },
+            { filePath: 'assets/logo.png', crId: '', fileStatus: 3 },
           ],
         },
       });
