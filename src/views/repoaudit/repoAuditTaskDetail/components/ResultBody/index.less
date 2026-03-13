@@ -2,6 +2,10 @@
   border-color: grey !important;
 }
 
+.resultBodyWrapper {
+  min-width: 500px;
+}
+
 .listItem {
   cursor: pointer;
   padding: 12px;
@@ -10,13 +14,30 @@
 
 .listCollapsePanelSpace {
   display: flex;
-  // width: 100%;
+  width: 100%;
   justify-content: space-between;
-  // white-space: nowrap;
-  // overflow: hidden;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+  gap: 8px;
+}
+
+// 覆盖 antd Collapse header，让 header 内容撑满且不溢出
+:global {
+  .ant-collapse-header {
+    overflow: hidden;
+  }
+  .ant-collapse-header-text {
+    overflow: hidden;
+    min-width: 0;
+    flex: 1;
+  }
 }
 
 .listCollapsePanelText {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

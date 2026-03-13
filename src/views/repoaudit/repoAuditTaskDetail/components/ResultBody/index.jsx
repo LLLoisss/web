@@ -95,156 +95,163 @@ const ResultsBody = ({
   }
 
   return (
-    <List
-      itemLayout="vertical"
-      dataSource={results}
-      renderItem={(item) => {
-        // 判断当前 item 是否展开（active）—— Panel key 用的是 item.id
-        const isActive = activeKeys.includes(String(item.id));
-        const isAccepted = item.status === ORDER_STATUS.ACCEPTED;
-        const isIgnored = item.status === ORDER_STATUS.IGNORED;
-        const fullBottomLabel = `${currentFilePath}${
-          item.updateTime ? ` · ${item.updateTime}` : ''
-        }`;
-        return (
-          <List.Item
-            key={item.id}
-            className={styles.listItem}
-            style={{
-              background: isActive ? 'rgba(24, 144, 255, 0.08)' : 'transparent',
-            }}
-          >
-            <Collapse activeKey={activeKeys} onChange={onCollapseChange}>
-              <Panel
-                header={
-                  <Space className={styles.listCollapsePanelSpace}>
-                    {/* 左侧 */}
-                    <Space style={{ flexShrink: 0, minWidth: '20px' }}>
-                      {levelTag(item.issueLevel)}
-                    </Space>
-                    {/* 中间 */}
-                    <Text className={styles.listCollapsePanelTex}>
-                      {item.issueType}
-                      {seenResults.includes(item.id) ? (
-                        <EyeOutlined
-                          title="已经查看过"
-                          style={{ color: '#1890ff', marginLeft: '8px' }}
-                        />
+    <div className={styles.resultBodyWrapper}>
+      <List
+        itemLayout="vertical"
+        dataSource={results}
+        renderItem={(item) => {
+          // 判断当前 item 是否展开（active）—— Panel key 用的是 item.id
+          const isActive = activeKeys.includes(String(item.id));
+          const isAccepted = item.status === ORDER_STATUS.ACCEPTED;
+          const isIgnored = item.status === ORDER_STATUS.IGNORED;
+          const fullBottomLabel = `${currentFilePath}${
+            item.updateTime ? ` · ${item.updateTime}` : ''
+          }`;
+          return (
+            <List.Item
+              key={item.id}
+              className={styles.listItem}
+              style={{
+                background: isActive
+                  ? 'rgba(24, 144, 255, 0.08)'
+                  : 'transparent',
+              }}
+            >
+              <Collapse activeKey={activeKeys} onChange={onCollapseChange}>
+                <Panel
+                  header={
+                    <div className={styles.listCollapsePanelSpace}>
+                      {/* 左侧 */}
+                      <span style={{ flexShrink: 0 }}>
+                        {levelTag(item.issueLevel)}
+                      </span>
+                      {/* 中间 */}
+                      <Text className={styles.listCollapsePanelText}>
+                        {item.issueType}
+                        {seenResults.includes(item.id) ? (
+                          <EyeOutlined
+                            title="已经查看过"
+                            style={{ color: '#1890ff', marginLeft: '8px' }}
+                          />
+                        ) : (
+                          <EyeOutlined
+                            title="还没查看过"
+                            style={{ marginLeft: '8px' }}
+                          />
+                        )}
+                      </Text>
+
+                      {/* 右边 */}
+                      {item.status === 0 ? (
+                        <Space style={{ flexShrink: 0 }}>
+                          <Button
+                            size="small"
+                            type="primary"
+                            ghost
+                            icon={<CheckCircleOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation(); // 阻止 Collapse 切换
+                              handleFeedback(item, 1);
+                            }}
+                          >
+                            采纳
+                          </Button>
+                          <Button
+                            size="small"
+                            default
+                            icon={<CloseCircleOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation(); // 阻止 Collapse 切换
+                              handleFeedback(item, 2);
+                            }}
+                            style={{ color: 'gray' }}
+                            className={styles.customButton}
+                          >
+                            忽略
+                          </Button>
+                        </Space>
                       ) : (
-                        <EyeOutlined
-                          title="还没查看过"
-                          style={{ marginLeft: '8px' }}
-                        />
+                        <Tag
+                          color={isAccepted ? 'success' : 'default'}
+                          style={{ flexShrink: 0, margin: 0 }}
+                        >
+                          {isAccepted ? '已采纳' : '已忽略'}
+                        </Tag>
                       )}
-                    </Text>
-
-                    {/* 右边 */}
-                    {item.status === 0 ? (
-                      <Space style={{ minWidth: '20px' }}>
-                        <Button
-                          size="small"
-                          type="primary"
-                          ghost
-                          icon={<CheckCircleOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation(); // 阻止 Collapse 切换
-                            handleFeedback(item, 1);
-                          }}
-                        >
-                          采纳
-                        </Button>
-                        <Button
-                          size="small"
-                          default
-                          icon={<CloseCircleOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation(); // 阻止 Collapse 切换
-                            handleFeedback(item, 2);
-                          }}
-                          style={{ color: 'gray' }}
-                          className={styles.customButton}
-                        >
-                          忽略
-                        </Button>
-                      </Space>
-                    ) : (
-                      <Tag color={isAccepted ? 'success' : 'default'}>
-                        {isAccepted ? '已采纳' : '已忽略'}
-                      </Tag>
-                    )}
-                  </Space>
-                }
-                key={item.id}
-              >
-                <ReactMarkdown
-                  components={{
-                    code(props) {
-                      const { children, className, node, ...rest } = props;
-                      const match = /language-(\w+)/.exec(className || '');
-                      // 1. 检查是否有语言标记 (例如 ```js )
-                      const language = match?.[1];
-
-                      // 2. 只有当匹配到语言 且 不是行内代码时，才使用高亮组件
-                      return language ? (
-                        <div className={styles.reactMarkdownContainer}>
-                          {/* 左上角语言标识 */}
-                          <div
-                            className={styles.reactMarkdownLanguageContainer}
-                          >
-                            {language}
-                          </div>
-
-                          <SyntaxHighlighter
-                            {...rest}
-                            PreTag="div"
-                            language={language}
-                            style={oneLight}
-                            customStyle={{
-                              margin: 0,
-                              paddingTop: '32px',
-                              background: 'transparent', //  让外层背景生效
-                              borderRadius: '10px',
-                            }}
-                            codeTagProps={{
-                              style: {
-                                color: '#555', // 默认文字
-                                fontWeight: 500,
-                              },
-                            }}
-                          >
-                            {String(children).replace(/\n$/, '')}
-                          </SyntaxHighlighter>
-                        </div>
-                      ) : (
-                        // 3. 否则作为普通行内代码处理 (如 `variable`)
-                        <code
-                          {...rest}
-                          className={`${className} ${styles.reactMarkdownCodeContainer}`}
-                        >
-                          {children}
-                        </code>
-                      );
-                    },
-                  }}
+                    </div>
+                  }
+                  key={item.id}
                 >
-                  {item.issueDetail}
-                </ReactMarkdown>
-              </Panel>
-            </Collapse>
+                  <ReactMarkdown
+                    components={{
+                      code(props) {
+                        const { children, className, node, ...rest } = props;
+                        const match = /language-(\w+)/.exec(className || '');
+                        // 1. 检查是否有语言标记 (例如 ```js )
+                        const language = match?.[1];
 
-            <div style={{ marginTop: 6 }}>
-              <Text
-                type="secondary"
-                style={{ fontSize: 12 }}
-                title={fullBottomLabel}
-              >
-                {fullBottomLabel}
-              </Text>
-            </div>
-          </List.Item>
-        );
-      }}
-    />
+                        // 2. 只有当匹配到语言 且 不是行内代码时，才使用高亮组件
+                        return language ? (
+                          <div className={styles.reactMarkdownContainer}>
+                            {/* 左上角语言标识 */}
+                            <div
+                              className={styles.reactMarkdownLanguageContainer}
+                            >
+                              {language}
+                            </div>
+
+                            <SyntaxHighlighter
+                              {...rest}
+                              PreTag="div"
+                              language={language}
+                              style={oneLight}
+                              customStyle={{
+                                margin: 0,
+                                paddingTop: '32px',
+                                background: 'transparent', //  让外层背景生效
+                                borderRadius: '10px',
+                              }}
+                              codeTagProps={{
+                                style: {
+                                  color: '#555', // 默认文字
+                                  fontWeight: 500,
+                                },
+                              }}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          </div>
+                        ) : (
+                          // 3. 否则作为普通行内代码处理 (如 `variable`)
+                          <code
+                            {...rest}
+                            className={`${className} ${styles.reactMarkdownCodeContainer}`}
+                          >
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {item.issueDetail}
+                  </ReactMarkdown>
+                </Panel>
+              </Collapse>
+
+              <div style={{ marginTop: 6 }}>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 12 }}
+                  title={fullBottomLabel}
+                >
+                  {fullBottomLabel}
+                </Text>
+              </div>
+            </List.Item>
+          );
+        }}
+      />
+    </div>
   );
 };
 
