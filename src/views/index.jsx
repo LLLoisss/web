@@ -57,45 +57,6 @@ import styles from './index.less';
 const { Content } = Layout;
 const { Text } = Typography;
 const { TabPane } = Tabs;
-// 根据文件路径从数据中查找并返回对应的文件对象
-// --- 辅助函数：构建目录树 ---
-// 这里的关键是：树的叶子节点必须保存 crId，以便点击时发起请求
-// const buildTreeData = (flatFileList) => {
-//   const root = { key: "root", title: "Root", children: [] };
-
-//   const ensureChild = (node, name) => {
-//     if (!node.children) node.children = [];
-//     let child = node.children.find((c) => c.title === name);
-//     if (!child) {
-//       child = { key: `${node.key}/${name}`, title: name, children: [] };
-//       node.children.push(child);
-//     }
-//     return child;
-//   };
-
-//   flatFileList.forEach((file) => {
-//     const parts = file.filePath.split("/");
-//     let current = root;
-//     parts.forEach((part, idx) => {
-//       // 如果是最后一部分，说明是文件（叶子节点）
-//       if (idx === parts.length - 1) {
-//         if (!current.children) current.children = [];
-//         current.children.push({
-//           key: file.filePath, // 使用 filePath 作为 key
-//           title: part,
-//           isLeaf: true,
-//           icon: <span style={{ fontSize: 14 }}>📄</span>,
-//           // 携带额外数据，方便点击时取用
-//           data: file,
-//         });
-//       } else {
-//         current = ensureChild(current, part);
-//       }
-//     });
-//   });
-
-//   return root.children;
-// };
 const renderLeafTitle = (fileName, file) => {
   // TODO:确认高中低问题数量
   const reviewStatus = file.fileStatus;

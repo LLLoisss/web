@@ -24,7 +24,8 @@ const FileTreeBody = ({
       onSelect={onSelectFile}
       defaultExpandAll
       style={{
-        width: '100%',
+        minWidth: '100%',
+        width: 'max-content',
       }}
     />
   );
