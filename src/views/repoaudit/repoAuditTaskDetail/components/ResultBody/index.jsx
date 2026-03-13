@@ -34,16 +34,14 @@ const { Text } = Typography;
 const { Panel } = Collapse;
 
 const levelTag = (issueLevel) => {
-  switch (issueLevel) {
-    case ISSUE_LEVELS.HIGH:
-      return <Tag color="red">高</Tag>;
-    case ISSUE_LEVELS.MEDIUM:
-      return <Tag color="orange">中</Tag>;
-    case ISSUE_LEVELS.LOW:
-      return <Tag color="blue">低</Tag>;
-    default:
-      return <Tag>默认</Tag>;
-  }
+  // 统一转为字符串并处理大小写，避免 null/undefined 报错
+  const levelStr = String(issueLevel || '');
+
+  if (levelStr.includes(ISSUE_LEVELS.HIGH)) return <Tag color="red">高</Tag>;
+  if (levelStr.includes(ISSUE_LEVELS.MEDIUM))
+    return <Tag color="orange">中</Tag>;
+  if (levelStr.includes(ISSUE_LEVELS.LOW)) return <Tag color="blue">低</Tag>;
+  return <Tag>默认</Tag>;
 };
 
 const ResultsBody = ({
