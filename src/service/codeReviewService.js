@@ -2,6 +2,7 @@ import {
   mockFetchReviewSummaryApi,
   mockFetchFileDetailApi,
   mockSubmitFeedbackApi,
+  mockReviewItemRecord,
 } from '../../mock/data/mockReviewApi';
 
 import request from './reviewRequest';
@@ -42,9 +43,10 @@ class CodeReviewService {
   }
 
   // TODO:4. 前端埋点：查看记录
-  async reviewItemRecord(id) {
-    const res = await request.post(`/api/coding/record`, { id });
-    return res;
+  async reviewItemRecord({ crId, order }) {
+    const res = await mockReviewItemRecord({ crId, order });
+    // const res = await request.post(`/api/coding/record`, { crId, order });
+    return res.data;
   }
 }
 

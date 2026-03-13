@@ -36,8 +36,18 @@ export function mockFetchReviewSummaryApi(mergeId) {
               lowProblemNum: 1,
             },
             { id: 'FILE_003', filePath: 'test.md', crId: '', fileStatus: 0 },
-            { id: 'FILE_004', filePath: 'README.md', crId: 'CR_README_003', fileStatus: 2 },
-            { id: 'FILE_005', filePath: 'assets/logo.png', crId: '', fileStatus: 3 },
+            {
+              id: 'FILE_004',
+              filePath: 'README.md',
+              crId: 'CR_README_003',
+              fileStatus: 2,
+            },
+            {
+              id: 'FILE_005',
+              filePath: 'assets/logo.png',
+              crId: '',
+              fileStatus: 3,
+            },
           ],
         },
       });
@@ -75,7 +85,7 @@ index fc66..7c63 100644
             status: 0, // 0-未处理
             issueDetail:
               '建议在函数入口明确校验 input 并抛错或返回可控值\n\n**风险等级**: CRITICAL',
-          issueLevel: 'CRITICAL',
+            issueLevel: 'CRITICAL',
             issueType: 'hooks 啊啊啊',
           },
           {
@@ -106,8 +116,7 @@ index aa11..bb22 100644
             crId: crId,
             order: 1,
             status: 0,
-            issueDetail:
-              '日期格式化函数缺少时区处理\n\n**风险等级**: CRITICAL',
+            issueDetail: '日期格式化函数缺少时区处理\n\n**风险等级**: CRITICAL',
             issueLevel: 'CRITICAL',
             issueType: '逻辑缺陷',
           },
@@ -126,8 +135,7 @@ index aa11..bb22 100644
             crId: crId,
             order: 3,
             status: 0,
-            issueDetail:
-              '缺少对无效日期的边界检查\n\n**风险等级**: MINOR',
+            issueDetail: '缺少对无效日期的边界检查\n\n**风险等级**: MINOR',
             issueLevel: 'MINOR',
             issueType: '健壮性',
           },
@@ -146,8 +154,7 @@ index aa11..bb22 100644
             crId: crId,
             order: 5,
             status: 0,
-            issueDetail:
-              '函数未导出 JSDoc 注释\n\n**风险等级**: LOW',
+            issueDetail: '函数未导出 JSDoc 注释\n\n**风险等级**: LOW',
             issueLevel: 'LOW',
             issueType: '文档规范',
           },
@@ -156,8 +163,7 @@ index aa11..bb22 100644
             crId: crId,
             order: 6,
             status: 0,
-            issueDetail:
-              '缺少单元测试覆盖\n\n**风险等级**: LOW',
+            issueDetail: '缺少单元测试覆盖\n\n**风险等级**: LOW',
             issueLevel: 'LOW',
             issueType: '测试覆盖',
           },
@@ -206,6 +212,24 @@ export function mockSubmitFeedbackApi(params) {
           crId: crId,
           order: order,
           status: status, // 1-采纳, 2-忽略
+        },
+      });
+    }, 300);
+  });
+}
+
+// 4. 前端埋点：查看记录
+
+export function mockReviewItemRecord(params) {
+  const { crId, order } = params;
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        code: 200,
+        message: '记录查看记录成功',
+        data: {
+          crId: crId,
+          order: order, // 1-采纳, 2-忽略
         },
       });
     }, 300);

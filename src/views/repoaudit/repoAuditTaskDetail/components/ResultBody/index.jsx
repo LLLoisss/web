@@ -56,17 +56,21 @@ const ResultsBody = ({
   // Hooks 必须在所有条件分支之前调用，保证每次渲染调用顺序一致
   const [activeKeys, setActiveKeys] = useState([]);
   const seenResults = useSelector((state) => state.review.seenResults);
+  const currentFileCrId = useSelector((state) => state.review.currentFileCrId);
   const dispatch = useDispatch();
 
   const onCollapseChange = (keys) => {
-    console.log('results :>> ', results);
-    console.log('keys :>> ', keys);
     setActiveKeys(keys);
     const activeKey = Array.isArray(keys) ? keys[keys.length - 1] : keys;
     const item = results.find((r) => String(r.id) === activeKey);
-    if (item && !seenResults.includes(item.id)) {
-      dispatch(addSeenResult(item.id));
-      console.log('向后端发送请求 :>> ', item.id);
+    if (item && !seenResults.includes(item.id) && currentFileCrId) {
+      dispatch(
+        addSeenResult({
+          resultId: item.id,
+          crId: currentFileCrId,
+          order: item.order,
+        }),
+      );
     }
   };
 

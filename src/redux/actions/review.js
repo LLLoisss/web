@@ -143,11 +143,19 @@ const resetAllCache = () => ({
   type: RESET_ALL_CACHE,
 });
 
-// 标记某个审查结果为已查看
-const addSeenResult = (resultId) => ({
-  type: ADD_SEEN_RESULT,
-  payload: resultId,
-});
+// 4. 标记某个审查结果为已查看（先调用后端埋点接口，成功后再更新状态）
+const addSeenResult =
+  ({ resultId, crId, order }) =>
+  (dispatch) => {
+    codeReviewService
+      .reviewItemRecord({ crId, order })
+      .then(() => {
+        dispatch({ type: ADD_SEEN_RESULT, payload: resultId });
+      })
+      .catch((err) => {
+        console.error('记录查看失败:', err);
+      });
+  };
 
 // --- Action Handlers (Reducer Logic) ---
 const ACTION_HANDLERS = {
