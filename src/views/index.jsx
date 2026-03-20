@@ -97,9 +97,13 @@ const renderLeafTitle = (fileName, file) => {
   return (
     <Space size={6}>
       <span>{fileName}</span>
-      <Badge count={stats.high} size="small" />
-      <Badge count={stats.medium} size="small" color="#faad14" />
-      <Badge count={stats.low} size="small" color="#1890ff" />
+      {stats.high > 0 && <Badge count={stats.high} size="small" />}
+      {stats.medium > 0 && (
+        <Badge count={stats.medium} size="small" color="#faad14" />
+      )}
+      {stats.low > 0 && (
+        <Badge count={stats.low} size="small" color="#1890ff" />
+      )}
     </Space>
   );
 };
