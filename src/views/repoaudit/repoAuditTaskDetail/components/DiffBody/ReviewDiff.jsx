@@ -40,13 +40,15 @@ const parseUnifiedDiff = (diffText) => {
           text: line,
         });
       } else if (oldLine === null || newLine === null) {
-        out.push({
-          id: id++,
-          type: HUNK,
-          oldLine: null,
-          newLine: null,
-          text: line,
-        });
+        // 缺失 hunk header 时，只解析加减号，不分配行号
+        const prefix = line[0];
+        if (prefix === '+') {
+          out.push({ id: id++, type: ADD, oldLine: null, newLine: null, text: line });
+        } else if (prefix === '-') {
+          out.push({ id: id++, type: DEL, oldLine: null, newLine: null, text: line });
+        } else {
+          out.push({ id: id++, type: CTX, oldLine: null, newLine: null, text: line });
+        }
       } else {
         // 前缀 + / -,或者为空格
         const prefix = line[0];

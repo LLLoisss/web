@@ -71,7 +71,7 @@ export function mockFetchFileDetailApi(id) {
 index fc66..7c63 100644
 --- a/src/parser/index.ts
 +++ b/src/parser/index.ts
-@@ -30,4 +30,5 @@ export function parse(input: string) {
+
 -  const len = input.length
 +  const len = input?.length ?? 0
 +  if (len === 0) return null
