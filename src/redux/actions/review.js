@@ -233,12 +233,17 @@ const ACTION_HANDLERS = {
           [crId]: { diff: diff || '', problemList: problemList || [] },
         };
       }
-      // 同步更新fileList中对应文件的crId和状态
-      nextState.fileList = state.fileList.map((f) =>
-        f.id === id
-          ? { ...f, crId, fileStatus: responseFileStatus != null ? responseFileStatus : f.fileStatus }
-          : f,
-      );
+      // 同步更新fileList中对应文件的所有相关字段
+      nextState.fileList = state.fileList.map((f) => {
+        if (f.id !== id) return f;
+        // 排除详情级别的数据，同步其余所有字段到fileList
+        const { fileStatus: fs, ...rest } = payload;
+        return {
+          ...f,
+          ...rest,
+          ...(fs != null && { fileStatus: fs }),
+        };
+      });
     }
     // crId不存在，仅设置展示数据，不缓存
 
